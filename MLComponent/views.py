@@ -101,3 +101,6 @@ def NCFRatingRec(request, pk):
     
     return HttpResponse(json.dumps(recommendations), content_type='application/json')
     
+@api_view(['GET'])
+def tempView(request): 
+    return HttpResponse(json.dumps({"status": "temp json working"}), content_type='application/json')
