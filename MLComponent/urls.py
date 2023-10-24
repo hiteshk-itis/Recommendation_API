@@ -44,5 +44,5 @@ urlpatterns = [
     path('get_recommendation/ncf/rating/individual/<int:pk>/', views.NCFRatingRec), 
 
     path('get_recommendation/rating/individual/hybrid/<int:pk>/', views.SVDRatingRec), 
-    path('tmp', views.tempView), 
+    path('tmp/<int:pk>', views.tempView), 
 ]
