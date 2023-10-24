@@ -1,0 +1,15 @@
+*.pkl
+*.npy
+*.pkl.npy
+oct15_2023
+*.log
+*.pot
+courseRecoSysEnv
+.env
+*.sock
+db.sqlite3
+oct19_2023
+__pycache__
+migrations
+data_info_rating
+model_rating
