@@ -1,4 +1,5 @@
 from .models import PredictionsRatingDf,PredictionsQuizDf,PredictionsAssnDf
+from preprocessingComponent.models import CourseRatingPreprocessed
 
 from surprise import Reader, Dataset
 from surprise.model_selection import train_test_split, cross_validate, GridSearchCV
@@ -11,7 +12,7 @@ import random
 
 def trainset_and_testset_rating(): 
     
-    rating = pd.read_pickle("rating.pkl")
+    rating = pd.DataFrame.from_records(CourseRatingPreprocessed.objects.all().values())
 
     reader = Reader(rating_scale=(0,5))
     data = Dataset.load_from_df(rating,reader)
@@ -110,3 +111,32 @@ def train_and_test_svdModel(trainset, testset, model_for):
     ]
     model_df.objects.bulk_create(model_instances)
     return predictions_records
+
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+import sklearn
+import pickle
+from numba import jit, cuda
+from preprocessingComponent.models import CourseInfoPreprocessed
+
+@jit(target_backend = 'cuda')
+def makeCosineSimAndIndices(): 
+    data_course_list = pd.DataFrame.from_records(CourseInfoPreprocessed.objects.all().values())
+    _df = data_course_list
+    based_on_col = "tag"
+#   indices = pd.Series(_df.index,index=_df["id"])
+    indices=pd.Series(range(0, data_course_list['course_name'].size),index = data_course_list['course_name'].tolist())
+
+    count: sklearn.feature_extraction.text.TfidfVectorizer =TfidfVectorizer()
+    count_matrix = count.fit_transform(_df[based_on_col])
+    cosine_sim = cosine_similarity(count_matrix,count_matrix)
+
+    storeAsPkl(indices, "models/content_based/indices.pkl")
+    storeAsPkl(cosine_sim, "models/content_based/cosineSim.pkl")
+    return {"status": "models built"}
+
+def storeAsPkl(data, path): 
+    f = open(path, "wb")
+    pickle.dump(data, f)
+    f.close()

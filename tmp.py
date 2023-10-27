@@ -22,3 +22,18 @@
 # f = open("oct19_2023/cosineSim_Oct19.pkl", "wb")
 # pickle.dump(cosineSim_Oct19, f)
 # f.close()
+
+
+import requests
+RECO_URL = "http://101.250.10.131/api/"
+RECO_TOKEN = "75c184e196782d4d6e96ef9d2301d5d749992799"
+
+url = RECO_URL
+token = RECO_TOKEN
+tableName = "course_ratings"
+r = requests.get(url + tableName, headers={
+    "Authorization": "token" + token
+})
+
+resp = r.json()
+# print("response is: \n", resp)

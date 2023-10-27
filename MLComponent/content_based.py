@@ -1,4 +1,7 @@
-from .models import ContentBasedFinalDf as df, PredictionsRatingDf
+from preprocessingComponent.models import CourseInfoRaw, TagsRaw, UserListRaw, CourseRatingRaw, CourseInfoPreprocessed, TagsPreprocessed, UserListPreprocessed, CourseRatingPreprocessed
+
+from .models import PredictionsRatingDf
+
 from courseRecoOne.models import CourseList, UserList
 
 import pickle as pkl
@@ -15,41 +18,47 @@ tf.compat.v1.reset_default_graph()
 load_dotenv()
 
 # Utils Function 
-def makeColNamesLowerCase(df:pd.DataFrame) -> list:
-  df.columns = [str.lower(str(val)) for val in df.columns]
-  return df.columns
+# def makeColNamesLowerCase(df:pd.DataFrame) -> list:
+#   df.columns = [str.lower(str(val)) for val in df.columns]
+#   return df.columns
 
-def rating_pipeline(course_rating: pd.DataFrame) -> pd.DataFrame:
-  dfGrpByStdCourse = course_rating.groupby(['student', 'Course_Code'])
-  dfGrpByStdCourseCount = pd.DataFrame(dfGrpByStdCourse.count())
-  dfGrpByStdCourseMean = pd.DataFrame(dfGrpByStdCourse.mean())
-  dfGrpByStdCourseMean.sort_values('rating', ascending=False)
-  stdCourseMap = pd.DataFrame(dfGrpByStdCourseMean['rating']).reset_index()
-  return stdCourseMap
+# def rating_pipeline(course_rating: pd.DataFrame) -> pd.DataFrame:
+#   dfGrpByStdCourse = course_rating.groupby(['student', 'Course_Code'])
+#   dfGrpByStdCourseCount = pd.DataFrame(dfGrpByStdCourse.count())
+#   dfGrpByStdCourseMean = pd.DataFrame(dfGrpByStdCourse.mean())
+#   dfGrpByStdCourseMean.sort_values('rating', ascending=False)
+#   stdCourseMap = pd.DataFrame(dfGrpByStdCourseMean['rating']).reset_index()
+#   return stdCourseMap
 
 # Data Imports and Reads
 # data_df = pd.DataFrame.from_records(df.objects.all().values())
-data_df = pd.read_pickle("oct19_2023/preprocessedCourseInfoDf_oct19.pkl")
+# data_df = pd.read_pickle("oct19_2023/preprocessedCourseInfoDf_oct19.pkl")
+data_df = pd.DataFrame.from_records(CourseInfoPreprocessed.objects.all().values())
 
 data_course_list = data_df
 # data_course_list = pd.DataFrame.from_records(CourseList.objects.all().values())
 
-data_user_list = pd.read_pickle("oct19_2023/userList_Oct19.pkl")
-def makeColNamesLowerCase(df:pd.DataFrame) -> list:
-  df.columns = [str.lower(str(val)) for val in df.columns]
-  return df.columns
-makeColNamesLowerCase(data_user_list)
+# data_user_list = pd.read_pickle("oct19_2023/userList_Oct19.pkl")
+data_user_list = pd.DataFrame.from_records(UserListPreprocessed.objects.all().values())
+
+# def makeColNamesLowerCase(df:pd.DataFrame) -> list:
+#   df.columns = [str.lower(str(val)) for val in df.columns]
+#   return df.columns
+# makeColNamesLowerCase(data_user_list)
 # data_user_list = pd.DataFrame.from_records(UserList.objects.all().values())
 
-rating_Oct19 = pd.read_pickle('oct19_2023/rating_Oct19.pkl')
-rating = rating_pipeline(rating_Oct19)
+# rating_Oct19 = pd.read_pickle('oct19_2023/rating_Oct19.pkl')
+# rating = rating_pipeline(rating_Oct19)
+rating = pd.DataFrame.from_records(CourseRatingPreprocessed.objects.all().values())
 
+# indices=np.load("models/content_based/indices.pkl", allow_pickle=True)
 indices=pd.Series(range(0, data_course_list['course_name'].size),index = data_course_list['course_name'].tolist())
 
 indicesPkl = indices
 # indicesPkl = pd.read_pickle('indices_content_based.pkl')
 
-cosine_sim = np.load('oct19_2023/cosineSim_Oct19.pkl', allow_pickle=True)
+# cosine_sim = np.load('oct19_2023/cosineSim_Oct19.pkl', allow_pickle=True)
+cosine_sim = np.load('models/content_based/cosineSim.pkl', allow_pickle=True)
 # cosine_sim = pkl.load(open('MLComponent/cosine_sim.pkl', 'rb'))
 
 
@@ -83,7 +92,7 @@ def embed_user_information(userid, embed_for="rating"):
 
   if (embed_for == "rating"):
     # rated_courses
-    rated_courses_id = rating.loc[rating['student'] == userid, ['Course_Code', 'rating']].values.tolist()
+    rated_courses_id = rating.loc[rating['student'] == userid, ['course_code', 'rating']].values.tolist()
     rated_courses = []
     for i in rated_courses_id:
       rated_course_dict = data_course_list.loc[data_course_list['id'] == i[0], ['id', 'course_name', 'center_code']].to_dict('records')[0]

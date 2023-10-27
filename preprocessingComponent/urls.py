@@ -16,16 +16,17 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from courseRecoOne import urls as courseRecoOne_urls    
-from studentData import urls as std_urls    
-from MLComponent import urls as ml_urls    
-from preprocessingComponent import urls as pc_urls
 
-urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api/', include('courseRecoOne.urls')),
-    path('api/', include(std_urls)),
-    path('api/', include(ml_urls)),
-    path('api/', include(pc_urls)),
+from rest_framework import routers
+from . import views
+
+
+# router.register(r'get_rec', views.ex_view, basename="get-rec")
+
+
+
+urlpatterns = [     
+    path('retrieve_raw_tables/<slug:tableName>', views.retrieveRawTables), 
+    path('preprocess_raw_tables/<slug:tableName>', views.preprocessRawTables), 
 
 ]

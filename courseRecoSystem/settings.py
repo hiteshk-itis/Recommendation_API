@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'courseRecoOne',
     'studentData',
     'MLComponent',
+    'preprocessingComponent',
     'rest_framework.authtoken'
 ]
 
@@ -113,7 +114,8 @@ DATABASES = {
         'PASSWORD': os.getenv('DATABASE_PASSWORD'),  
         'HOST': os.getenv('DATABASE_HOST'),  
         'PORT': os.getenv('DATABASE_PORT'),  
-    }  
+    }
+
 }  
 
 # Password validation

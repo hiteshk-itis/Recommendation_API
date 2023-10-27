@@ -96,9 +96,14 @@ def buildModel_forAssn(request):
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def NCFRatingRec(request, pk):
-    
     recommendations = NCF_rating_api(pk)
-    
+    return HttpResponse(json.dumps(recommendations), content_type='application/json')
+
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def buildModel_forCb(request):
+    status = NCF_rating_api(pk)
     return HttpResponse(json.dumps(recommendations), content_type='application/json')
     
 @api_view(['GET'])

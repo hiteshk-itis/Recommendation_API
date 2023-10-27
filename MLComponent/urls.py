@@ -29,6 +29,7 @@ router.register(r'ml', views.ContentBasedFinalDfViewSet)
 
 urlpatterns = [
     path('', include(router.urls)), 
+    path('build_model/content_based/', views.buildModel_forCb),
     path('build_model/rating/', views.buildModel_forRating),
     path('build_model/quiz/', views.buildModel_forQuiz),
     path('build_model/assignment/', views.buildModel_forAssn),
