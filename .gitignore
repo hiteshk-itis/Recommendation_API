@@ -10,6 +10,5 @@ courseRecoSysEnv
 db.sqlite3
 oct19_2023
 __pycache__
-migrations
 data_info_rating
 model_rating
