@@ -1,5 +1,6 @@
-from preprocessingComponent.models import CourseInfoRaw, TagsRaw, UserListRaw, CourseRatingRaw, CourseInfoPreprocessed, TagsPreprocessed, UserListPreprocessed, CourseRatingPreprocessed
-
+from courseRecoSystem.imports import dataImports
+from courseRecoSystem import utilsFunctions
+from .imports import modelImports
 from .models import PredictionsRatingDf
 
 from courseRecoOne.models import CourseList, UserList
@@ -33,13 +34,13 @@ load_dotenv()
 # Data Imports and Reads
 # data_df = pd.DataFrame.from_records(df.objects.all().values())
 # data_df = pd.read_pickle("oct19_2023/preprocessedCourseInfoDf_oct19.pkl")
-data_df = pd.DataFrame.from_records(CourseInfoPreprocessed.objects.all().values())
+data_df = dataImports.data_course_list
 
 data_course_list = data_df
 # data_course_list = pd.DataFrame.from_records(CourseList.objects.all().values())
 
 # data_user_list = pd.read_pickle("oct19_2023/userList_Oct19.pkl")
-data_user_list = pd.DataFrame.from_records(UserListPreprocessed.objects.all().values())
+data_user_list = dataImports.data_user_list
 
 # def makeColNamesLowerCase(df:pd.DataFrame) -> list:
 #   df.columns = [str.lower(str(val)) for val in df.columns]
@@ -49,7 +50,7 @@ data_user_list = pd.DataFrame.from_records(UserListPreprocessed.objects.all().va
 
 # rating_Oct19 = pd.read_pickle('oct19_2023/rating_Oct19.pkl')
 # rating = rating_pipeline(rating_Oct19)
-rating = pd.DataFrame.from_records(CourseRatingPreprocessed.objects.all().values())
+rating = dataImports.data_user_list
 
 # indices=np.load("models/content_based/indices.pkl", allow_pickle=True)
 indices=pd.Series(range(0, data_course_list['course_name'].size),index = data_course_list['course_name'].tolist())
@@ -58,11 +59,15 @@ indicesPkl = indices
 # indicesPkl = pd.read_pickle('indices_content_based.pkl')
 
 # cosine_sim = np.load('oct19_2023/cosineSim_Oct19.pkl', allow_pickle=True)
-cosine_sim = np.load('models/content_based/cosineSim.pkl', allow_pickle=True)
+cosine_sim = modelImports.cosine_sim
 # cosine_sim = pkl.load(open('MLComponent/cosine_sim.pkl', 'rb'))
 
 
 def content_based(course_id, data=data_df, indices=indices, cosine_sim=cosine_sim):
+
+    status, msg = utilsFunctions.checkCourseInDb(course_id)
+    if not status: 
+      return msg
 
     id=indices[course_id]
     sim=[(index, cosine_sim[id][index]) for index in range(len(cosine_sim[id]))]
@@ -129,13 +134,15 @@ def embed_user_information(userid, embed_for="rating"):
 
 def SVD_rating(userid, get_recommend =5):
 
-  if (not data_user_list['id'].isin([userid]).any()): 
-    return {"error": "provided userid does not exist"}
+
+  status, msg = utilsFunctions.checkUserInDb(userid)
+  if not status: 
+    return msg
 
   res_dict = embed_user_information(userid)
   res_dict['recommended_courses'] = []
 
-  predictions_df = pd.DataFrame.from_records(PredictionsRatingDf.objects.all().values())
+  predictions_df = modelImports.PredictionsRatingDf
   predictions_userID = predictions_df[predictions_df['uid'] == userid].sort_values(by="est", ascending = False).head(5) 
   
   if (predictions_userID.empty): 
@@ -245,6 +252,11 @@ def NCF_rating_api(
     cosine_sim=cosine_sim,
     user_list=data_user_list
     ):
+
+  status, msg = utilsFunctions.checkUserInDb(user_id)
+  print("STATUS, MSG:", status, msg)
+  if not status: 
+    return msg
 
   # embed user information
   res_dict = embed_user_information(user_id)

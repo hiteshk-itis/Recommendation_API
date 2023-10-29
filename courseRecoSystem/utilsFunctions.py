@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-
+from courseRecoSystem.imports import dataImports
 
 
 
@@ -19,5 +19,14 @@ def applyLowerCase(val: str) -> str:
     else:
         return ''
 
-def checkCourseInDb(course_id: int) -> bool, dict:
-    
+def checkCourseInDb(course_id: int):
+    if not (dataImports.data_course_list['id'].isin([course_id])): 
+        return False, {"status": f"Error: course with {course_id} does not exist in the datbase."}
+    else: 
+        return True, {}
+
+def checkUserInDb(user_id: int):
+    if not (dataImports.data_user_list['id'].isin([user_id])): 
+        return False, {"status": f"Error: user with {user_id} does not exist in the datbase."}
+    else: 
+        return True, {}
