@@ -5,6 +5,7 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
+from courseRecoSystem.utilsFunctions import applyDictKeysLowerCase
 from .models import UserListRaw, CourseInfoRaw, CourseRatingRaw, TagsRaw
 
 KOREAN_URL = os.getenv('KOREAN_URL')
@@ -83,11 +84,63 @@ def makeColNamesLowerCase(df:pd.DataFrame) -> list:
   return df
 
 def retrieveTables(tableName: str): 
+    url = INDONESIAN_URL
+    token = INDONESIAN_TOKEN
+    pageNum = 1
+    numData = 30
+    total_pages = 0
+    uptoPage = 40
     if tableName == "course_info":
         # course-info
-        courseInfo = getDataFrameFromAPI("course-info", numData = 'all')
-        courseInfo_raw = makeColNamesLowerCase(courseInfo).replace({np.nan: None}).to_dict('records')
+        while (pageNum <= uptoPage): 
+          result = []
+          r = requests.get(url + "course-info",
+                  params = {
+                      "page": pageNum,
+                      "size": numData
+                  },
+                  headers = {
+                      "Authorization": "token "+ token
+                  })
+          resp = r.json()
+          total_pages = resp["total_pages"]
+          print(f"reading page: {pageNum}/{total_pages}")
+          status = False
+          if "results" in list(resp.keys()):
+            result.extend(resp["results"])
+            status = saveIntoCourseInfo(applyDictKeysLowerCase(result))
+          else: 
+            status = True
+          
+          if not status: 
+            return {"status": "Error: Failed to save in database"}
+          
+          if (resp["has_next"]): 
+            pageNum += 1
+          
+
+          del result
+        return {"status": "database updated with new data"}          
+        # courseInfo_raw = makeColNamesLowerCase(courseInfo).replace({np.nan: None}).to_dict('records')
+        
+        
+        
+        
+        
         model_df = CourseInfoRaw
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     elif tableName == "user_list": 
         # user-list
         userList = getDataFrameFromAPI("user-list", numData = 'all')
@@ -185,3 +238,30 @@ def retrieveTables(tableName: str):
     model_df.objects.bulk_create(model_instances)
 
     return {"status": "database updated"}
+
+def saveIntoCourseInfo(courseInfo_raw): 
+  
+  model_instances = [
+        CourseInfoRaw(
+            id = courseInfo_raw_record["id"]  ,
+            course_name = courseInfo_raw_record["course_name"],
+            course_code = courseInfo_raw_record["course_code"],
+            course_description = courseInfo_raw_record["course_description"],
+            course_cover_file = courseInfo_raw_record["course_cover_file"],
+            course_level = courseInfo_raw_record["course_level"],
+            course_info = courseInfo_raw_record["course_info"],
+            use_flag = courseInfo_raw_record["use_flag"],
+            register_datetime = courseInfo_raw_record["register_datetime"],
+            updated_datetime = courseInfo_raw_record["updated_datetime"],
+            register_agent = courseInfo_raw_record["register_agent"],
+            course_provider = courseInfo_raw_record["course_provider"],
+            syllabus = courseInfo_raw_record["syllabus"],
+            keyword = courseInfo_raw_record["keyword"],
+            center_code = courseInfo_raw_record["center_code"],
+            tag = courseInfo_raw_record["tag"],
+        )
+            for courseInfo_raw_record in courseInfo_raw
+        ]
+  CourseInfoRaw.objects.bulk_create(model_instances)
+  print("Database Updated")
+  return True

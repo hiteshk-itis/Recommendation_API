@@ -19,6 +19,17 @@ def applyLowerCase(val: str) -> str:
     else:
         return ''
 
+def applyDictKeysLowerCase(in_dict):
+    if type(in_dict) is dict:
+        out_dict = {}
+        for key, item in in_dict.items():
+            out_dict[key.lower()] = applyDictKeysLowerCase(item)
+        return out_dict
+    elif type(in_dict) is list:
+        return [applyDictKeysLowerCase(obj) for obj in in_dict]
+    else:
+        return in_dict
+
 def checkCourseInDb(course_id: int):
     if not (dataImports.data_course_list['id'].isin([course_id]).any()): 
         return False, {"status": f"Error: course with course_id {course_id} does not exist in the database."}
