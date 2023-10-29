@@ -76,6 +76,8 @@ def getDataFrameFromAPI(tableName:str = "", serverName:str = "indonesian", start
         saveIntoCourseInfo(utilsFunctions.applyDictKeysLowerCase(result))
       if (resp["has_next"]):
         pageNum += 1
+      else: 
+        break
     return True, total_pages, pageNum
 
   else:
@@ -122,18 +124,6 @@ def retrieveTables(tableName: str, currPageNum = 1, _uptoPage = 40):
         return status, total_pages, pageNum
         courseInfo_raw = makeColNamesLowerCase(courseInfo).replace({np.nan: None}).to_dict('records')
         model_df = CourseInfoRaw
-    
-      
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     
     elif tableName == "user_list": 
         # user-list

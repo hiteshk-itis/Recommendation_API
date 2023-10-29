@@ -3,7 +3,7 @@ from .models import UserListRaw, CourseInfoRaw, CourseRatingRaw, TagsRaw
 # retrieve tables
 def retrieveAllRawTables(): 
     ttlPages = 0
-    currPageNum = 158
+    currPageNum = 1
     status = False
     # Raw
     # course_info raw
