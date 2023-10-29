@@ -20,13 +20,13 @@ def applyLowerCase(val: str) -> str:
         return ''
 
 def checkCourseInDb(course_id: int):
-    if not (dataImports.data_course_list['id'].isin([course_id])): 
+    if not (dataImports.data_course_list['id'].isin([course_id]).any()): 
         return False, {"status": f"Error: course with {course_id} does not exist in the datbase."}
     else: 
         return True, {}
 
 def checkUserInDb(user_id: int):
-    if not (dataImports.data_user_list['id'].isin([user_id])): 
-        return False, {"status": f"Error: user with {user_id} does not exist in the datbase."}
+    if not (dataImports.data_user_list['id'].isin([user_id]).any()): 
+        return False, {"status": f"Error: user with {user_id} does not exist in the datbase. Use content based recommendation with course id. eg.: `api/get_recommendation/content_based/<course_id>`"}
     else: 
         return True, {}

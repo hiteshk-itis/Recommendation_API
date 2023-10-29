@@ -9,3 +9,4 @@ data_user_list = pd.DataFrame.from_records(UserListPreprocessed.objects.all().va
 
 data_rating = pd.DataFrame.from_records(CourseRatingPreprocessed.objects.all().values())
 
+
