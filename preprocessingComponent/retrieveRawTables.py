@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 from courseRecoSystem.utilsFunctions import applyDictKeysLowerCase
 from .models import UserListRaw, CourseInfoRaw, CourseRatingRaw, TagsRaw
+from courseRecoSystem import utilsFunctions
 
 KOREAN_URL = os.getenv('KOREAN_URL')
 KOREAN_TOKEN = os.getenv('KOREAN_TOKEN')
@@ -15,7 +16,7 @@ INDONESIAN_TOKEN = os.getenv('INDONESIAN_TOKEN')
 RECO_URL = os.getenv('RECO_URL')
 RECO_TOKEN = os.getenv('RECO_TOKEN')
 
-def getDataFrameFromAPI(tableName:str = "", serverName:str = "indonesian", startPage: int = 1, numData: int | str = 20) -> pd.DataFrame | dict:
+def getDataFrameFromAPI(tableName:str = "", serverName:str = "indonesian", startPage: int = 1, numData: int | str = 20, uptoPage: int = None) -> pd.DataFrame | dict:
   if serverName == "indonesian":
     url = INDONESIAN_URL
     token = INDONESIAN_TOKEN
@@ -52,6 +53,31 @@ def getDataFrameFromAPI(tableName:str = "", serverName:str = "indonesian", start
       else:
         break
     return pd.DataFrame(result)
+  
+  elif uptoPage is not None: 
+    total_pages = 0
+    pageNum = startPage
+    while (pageNum != uptoPage+1): 
+      result = []
+      r = requests.get(url + tableName,
+              params = {
+                  "page": pageNum,
+                  "size": numData
+              },
+              headers = {
+                  "Authorization": "token "+ token
+              })
+      resp = r.json()
+      total_pages = resp["total_pages"]
+      
+      print(f"reading page: {pageNum}/{total_pages}")
+      if "results" in list(resp.keys()):
+        result.extend(resp["results"])
+        saveIntoCourseInfo(utilsFunctions.applyDictKeysLowerCase(result))
+      if (resp["has_next"]):
+        pageNum += 1
+    return True, total_pages, pageNum
+
   else:
     pageNum = startPage
     nData = numData
@@ -83,50 +109,19 @@ def makeColNamesLowerCase(df:pd.DataFrame) -> list:
   df.columns = [str.lower(str(val)) for val in df.columns]
   return df
 
-def retrieveTables(tableName: str): 
+def retrieveTables(tableName: str, currPageNum = 1, _uptoPage = 40): 
     url = INDONESIAN_URL
     token = INDONESIAN_TOKEN
-    pageNum = 1
+    pageNum = currPageNum
     numData = 30
     total_pages = 0
-    uptoPage = 40
+    uptoPage = _uptoPage
     if tableName == "course_info":
+      
         # course-info
-        while (pageNum <= uptoPage): 
-          result = []
-          r = requests.get(url + "course-info",
-                  params = {
-                      "page": pageNum,
-                      "size": numData
-                  },
-                  headers = {
-                      "Authorization": "token "+ token
-                  })
-          resp = r.json()
-          total_pages = resp["total_pages"]
-          print(f"reading page: {pageNum}/{total_pages}")
-          status = False
-          if "results" in list(resp.keys()):
-            result.extend(resp["results"])
-            status = saveIntoCourseInfo(applyDictKeysLowerCase(result))
-          else: 
-            status = True
-          
-          if not status: 
-            return {"status": "Error: Failed to save in database"}
-          
-          if (resp["has_next"]): 
-            pageNum += 1
-          
-
-          del result
-        return {"status": "database updated with new data"}          
-        # courseInfo_raw = makeColNamesLowerCase(courseInfo).replace({np.nan: None}).to_dict('records')
-        
-        
-        
-        
-        
+        status, total_pages, pageNum = getDataFrameFromAPI("course-info", startPage = currPageNum, numData = 30, uptoPage = _uptoPage)
+        return status, total_pages, pageNum
+        courseInfo_raw = makeColNamesLowerCase(courseInfo).replace({np.nan: None}).to_dict('records')
         model_df = CourseInfoRaw
     
     
@@ -264,4 +259,5 @@ def saveIntoCourseInfo(courseInfo_raw):
         ]
   CourseInfoRaw.objects.bulk_create(model_instances)
   print("Database Updated")
+  del model_instances
   return True
