@@ -1,6 +1,9 @@
 import numpy as np
 import pandas as pd
 
+
+
+
 def mapIdsToAnotherDf(idList: list, referenceDf: pd.DataFrame):
     res = []
     if not pd.isna([idList]).any():
@@ -15,3 +18,6 @@ def applyLowerCase(val: str) -> str:
         return str.lower(val)
     else:
         return ''
+
+def checkCourseInDb(course_id: int) -> bool, dict:
+    

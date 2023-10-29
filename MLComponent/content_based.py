@@ -62,8 +62,8 @@ cosine_sim = np.load('models/content_based/cosineSim.pkl', allow_pickle=True)
 # cosine_sim = pkl.load(open('MLComponent/cosine_sim.pkl', 'rb'))
 
 
-
 def content_based(course_id, data=data_df, indices=indices, cosine_sim=cosine_sim):
+
     id=indices[course_id]
     sim=[(index, cosine_sim[id][index]) for index in range(len(cosine_sim[id]))]
     sim=sorted(sim,key=lambda x:x[1],reverse=True)
