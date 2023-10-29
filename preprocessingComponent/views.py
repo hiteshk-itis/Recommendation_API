@@ -14,6 +14,7 @@ from rest_framework.permissions import IsAuthenticated
 from .retrieveRawTables import retrieveTables
 from .preprocessTables import preprocessTables
 import json
+from .realTimeDbUpdate import *
 # Create your views here.
 
 @api_view(['GET'])
@@ -29,4 +30,18 @@ def retrieveRawTables(request, tableName):
 @permission_classes([IsAuthenticated])
 def preprocessRawTables(request, tableName): 
     status = preprocessTables(tableName)
+    return HttpResponse(json.dumps(status), content_type='application/json')
+
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def batchUpdate(request): 
+    status_raw = retrieveAllRawTables()
+    status_preprocess = preprocessAllRawTables()
+    status_model = modelForAllAlgorithms()
+    status = {
+        "raw Tables Retrieved": status_raw, 
+        "raw Tables preprocessed": status_preprocess, 
+        "modeling done": status_model
+    }
     return HttpResponse(json.dumps(status), content_type='application/json')

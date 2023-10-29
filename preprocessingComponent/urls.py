@@ -28,5 +28,5 @@ from . import views
 urlpatterns = [     
     path('retrieve_raw_tables/<slug:tableName>', views.retrieveRawTables), 
     path('preprocess_raw_tables/<slug:tableName>', views.preprocessRawTables), 
-
+    path('batch_update', views.batchUpdate), 
 ]
