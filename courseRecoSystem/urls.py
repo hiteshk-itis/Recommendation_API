@@ -19,13 +19,13 @@ from django.urls import path, include
 from courseRecoOne import urls as courseRecoOne_urls    
 from studentData import urls as std_urls    
 from preprocessingComponent import urls as pc_urls
-from MLComponent import urls as ml_urls    
+# from MLComponent import urls as ml_urls    
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('courseRecoOne.urls')),
     path('api/', include(std_urls)),
-    path('api/', include(ml_urls)),
+    # path('api/', include(ml_urls)),
     path('api/', include(pc_urls)),
 
 ]

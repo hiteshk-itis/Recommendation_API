@@ -117,14 +117,13 @@ def retrieveTables(tableName: str, currPageNum = 1, _uptoPage = 40):
     total_pages = 0
     uptoPage = _uptoPage
     if tableName == "course_info":
-      
         # course-info
         status, total_pages, pageNum = getDataFrameFromAPI("course-info", startPage = currPageNum, numData = 30, uptoPage = _uptoPage)
         return status, total_pages, pageNum
         courseInfo_raw = makeColNamesLowerCase(courseInfo).replace({np.nan: None}).to_dict('records')
         model_df = CourseInfoRaw
     
-    
+      
     
     
     
