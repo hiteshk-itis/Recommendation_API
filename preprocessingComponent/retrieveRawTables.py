@@ -26,6 +26,13 @@ def getDataFrameFromAPI(tableName:str = "", serverName:str = "indonesian", start
   else:
     raise Exception("serverName Error: either `indonesian` or `korean`")
 
+  tableNameFunctionMap = {
+    "course-info": saveIntoCourseInfo, 
+    "course-rating": saveIntoCourseRatings, 
+    "tag": saveIntoTags, 
+    "user-list": saveIntoUserList, 
+  }
+
   result = []
   if numData == "all":
     pageNum = startPage
@@ -73,7 +80,8 @@ def getDataFrameFromAPI(tableName:str = "", serverName:str = "indonesian", start
       print(f"reading page: {pageNum}/{total_pages}")
       if "results" in list(resp.keys()):
         result.extend(resp["results"])
-        saveIntoCourseInfo(utilsFunctions.applyDictKeysLowerCase(result))
+        tableNameFunctionMap[tableName](utilsFunctions.applyDictKeysLowerCase(result))
+
       if (resp["has_next"]):
         pageNum += 1
       else: 
@@ -118,39 +126,16 @@ def retrieveTables(tableName: str, currPageNum = 1, _uptoPage = 40):
     numData = 30
     total_pages = 0
     uptoPage = _uptoPage
-    if tableName == "course_info":
-        # course-info
-        status, total_pages, pageNum = getDataFrameFromAPI("course-info", startPage = currPageNum, numData = 30, uptoPage = _uptoPage)
-        return status, total_pages, pageNum
-        courseInfo_raw = makeColNamesLowerCase(courseInfo).replace({np.nan: None}).to_dict('records')
-        model_df = CourseInfoRaw
-    
-    elif tableName == "user_list": 
-        # user-list
-        userList = getDataFrameFromAPI("user-list", numData = 'all')
-        # userList = pd.read_pickle("oct19_2023/userList_Oct19.pkl")
-        userList_raw = makeColNamesLowerCase(userList).replace({np.nan: None}).to_dict('records')
-        model_df = UserListRaw
-    elif tableName == "course_ratings":
-        # course-rating 
-        courseRatings = getDataFrameFromAPI("course-rating",numData = 'all')
-        # courseRatings = pd.read_pickle("oct19_2023/rating_Oct19.pkl")
-        courseRatings_raw = makeColNamesLowerCase(courseRatings).replace({np.nan: None}).to_dict('records')
-        model_df = CourseRatingRaw
-    elif tableName == "tags": 
-        # tags
-        tags = getDataFrameFromAPI("tags", numData="all")
-        # tags = pd.read_pickle("oct19_2023/tag_Oct19.pkl")
-        tags_raw = makeColNamesLowerCase(tags).replace({np.nan: None}).to_dict('records')
-        model_df = TagsRaw
-    else: 
-        return {"status": "table name specified does not exist."}
-    
-    if len(model_df.objects.all()): 
-        model_df.objects.all().delete()
 
-    if tableName == "course_info": 
-        model_instances = [
+    if not (tableName in ["course-info", "course-rating", "tag", "user-list"]): 
+      return {"status": f"Error: table name {tableName} specified does not exist."}, 0, 0
+
+    status, total_pages, pageNum = getDataFrameFromAPI(tableName, startPage = currPageNum, numData = 30, uptoPage = _uptoPage)
+    return status, total_pages, pageNum
+
+def saveIntoCourseInfo(courseInfo_raw): 
+  model_df = CourseInfoRaw
+  model_instances = [
         model_df(
             id = courseInfo_raw_record["id"]  ,
             course_name = courseInfo_raw_record["course_name"],
@@ -171,19 +156,14 @@ def retrieveTables(tableName: str, currPageNum = 1, _uptoPage = 40):
         )
             for courseInfo_raw_record in courseInfo_raw
         ]
-    elif tableName == "course_ratings": 
-        model_instances = [
-            model_df(
-                rating_id = courseRatings_raw_record["rating_id"],
-                rating = courseRatings_raw_record["rating"],
-                chapter_code = courseRatings_raw_record["chapter_code"],
-                student = courseRatings_raw_record["student"],
-                course_code = courseRatings_raw_record["course_code"],
-                center_code = courseRatings_raw_record["center_code"],
-            ) for courseRatings_raw_record in courseRatings_raw
-        ]
-    elif tableName == "user_list": 
-        model_instances = [
+  model_df.objects.bulk_create(model_instances)
+  print("Database Updated")
+  del model_instances
+  return True
+
+def saveIntoUserList(userList_raw): 
+  model_df = UserListRaw
+  model_instances = [
             model_df(
                 id = userList_raw_record["id"],
                 username = userList_raw_record["username"],
@@ -210,8 +190,31 @@ def retrieveTables(tableName: str, currPageNum = 1, _uptoPage = 40):
                 center_code = userList_raw_record["center_code"]
             ) for userList_raw_record in userList_raw
         ]
-    elif tableName == "tags": 
-      model_instances = [
+  model_df.objects.bulk_create(model_instances)
+  print("Database Updated")
+  del model_instances
+  return True
+
+def saveIntoCourseRatings(courseRatings_raw): 
+  model_df = CourseRatingRaw
+  model_instances = [
+            model_df(
+                rating_id = courseRatings_raw_record["rating_id"],
+                rating = courseRatings_raw_record["rating"],
+                chapter_code = courseRatings_raw_record["chapter_code"],
+                student = courseRatings_raw_record["student"],
+                course_code = courseRatings_raw_record["course_code"],
+                center_code = courseRatings_raw_record["center_code"],
+            ) for courseRatings_raw_record in courseRatings_raw
+        ]
+  model_df.objects.bulk_create(model_instances)
+  print("Database Updated")
+  del model_instances
+  return True
+
+def saveIntoTags(tags_raw): 
+  model_df = TagsRaw
+  model_instances = [
             model_df(
                 id = tags_raw_record["id"], 
                 tag_name = tags_raw_record["tag_name"], 
@@ -219,34 +222,7 @@ def retrieveTables(tableName: str, currPageNum = 1, _uptoPage = 40):
                 updated_at = tags_raw_record["updated_at"]
             ) for tags_raw_record in tags_raw
         ]
-    model_df.objects.bulk_create(model_instances)
-
-    return {"status": "database updated"}
-
-def saveIntoCourseInfo(courseInfo_raw): 
-  
-  model_instances = [
-        CourseInfoRaw(
-            id = courseInfo_raw_record["id"]  ,
-            course_name = courseInfo_raw_record["course_name"],
-            course_code = courseInfo_raw_record["course_code"],
-            course_description = courseInfo_raw_record["course_description"],
-            course_cover_file = courseInfo_raw_record["course_cover_file"],
-            course_level = courseInfo_raw_record["course_level"],
-            course_info = courseInfo_raw_record["course_info"],
-            use_flag = courseInfo_raw_record["use_flag"],
-            register_datetime = courseInfo_raw_record["register_datetime"],
-            updated_datetime = courseInfo_raw_record["updated_datetime"],
-            register_agent = courseInfo_raw_record["register_agent"],
-            course_provider = courseInfo_raw_record["course_provider"],
-            syllabus = courseInfo_raw_record["syllabus"],
-            keyword = courseInfo_raw_record["keyword"],
-            center_code = courseInfo_raw_record["center_code"],
-            tag = courseInfo_raw_record["tag"],
-        )
-            for courseInfo_raw_record in courseInfo_raw
-        ]
-  CourseInfoRaw.objects.bulk_create(model_instances)
+  model_df.objects.bulk_create(model_instances)
   print("Database Updated")
   del model_instances
   return True

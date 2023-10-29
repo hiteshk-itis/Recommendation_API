@@ -2,26 +2,32 @@ from .retrieveRawTables import retrieveTables
 from .models import UserListRaw, CourseInfoRaw, CourseRatingRaw, TagsRaw
 # retrieve tables
 def retrieveAllRawTables(): 
-    ttlPages = 0
-    currPageNum = 1
-    status = False
+    tableNames = ["course-rating", "tag", "user-list"]
+    modelNames = [UserListRaw, CourseInfoRaw, CourseRatingRaw, TagsRaw]
     # Raw
     # course_info raw
-    if len(CourseInfoRaw.objects.all()): 
-        CourseInfoRaw.objects.all().delete()
+    for modelName in modelNames: 
+        if len(modelName.objects.all()): 
+            modelName.objects.all().delete()
 
-    while (ttlPages != currPageNum): 
-        status, ttlPages, currPageNum = retrieveTables("course_info", currPageNum, currPageNum+9)
-        print("LOOP ITERATION CHANGED", status, ttlPages, currPageNum)
+    for tableName in tableNames: 
+        ttlPages = 0
+        currPageNum = 1
+        status = False
+        while (ttlPages != currPageNum): 
+            status, ttlPages, currPageNum = retrieveTables(tableName, currPageNum, currPageNum+9)
+            if type(status) == bool: 
+                print("LOOP ITERATION CHANGED", status, ttlPages, currPageNum, tableName)
+            else: 
+                return status
     if status: 
         return {"status": "whole database updated with new data"}
-    # tags raw
-    retrieveTables("tags")
-    # course_ratings raw
-    retrieveTables("course_ratings")
-    # user_list raw
-    retrieveTables("user_list")
-    pass
+    # # tags raw
+    # retrieveTables("tags")
+    # # course_ratings raw
+    # retrieveTables("course-ratings")
+    # # user_list raw
+    # retrieveTables("user-list")
 
 def preprocessAllRawTables(): 
     # Preprocess
