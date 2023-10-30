@@ -1,4 +1,4 @@
-workers = 4
+workers = 2
 
 bind = 'unix:/home/dlr/courseRecoSystem/courseRecoSystem.sock'
 

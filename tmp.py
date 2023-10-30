@@ -24,34 +24,34 @@
 # f.close()
 
 
-import requests
-from dotenv import load_dotenv
+# import requests
+# from dotenv import load_dotenv
 
-load_dotenv()
-RECO_URL = load_dotenv('RECO_URL')
-RECO_TOKEN = load_dotenv('RECO_TOKEN')
+# load_dotenv()
+# RECO_URL = load_dotenv('RECO_URL')
+# RECO_TOKEN = load_dotenv('RECO_TOKEN')
 
-INDONESIAN_URL = load_dotenv('INDONESIAN_URL')
-INDONESIAN_TOKEN = load_dotenv('INDONESIAN_TOKEN')
+# INDONESIAN_URL = load_dotenv('INDONESIAN_URL')
+# INDONESIAN_TOKEN = load_dotenv('INDONESIAN_TOKEN')
 
-# url = RECO_URL
-# token = RECO_TOKEN
-tableName = "course_ratings"
-url = INDONESIAN_URL
-token = INDONESIAN_TOKEN
-pageNum = 1
-numData = 30
-total_pages = 0
-uptoPage = 10
-r = requests.get(url + tableName,
-                  params = {
-                      "page": pageNum,
-                      "size": numData
-                  },
-                  headers = {
-                      "Authorization": "token "+ token
-                  })
+# # url = RECO_URL
+# # token = RECO_TOKEN
+# tableName = "course_ratings"
+# url = INDONESIAN_URL
+# token = INDONESIAN_TOKEN
+# pageNum = 1
+# numData = 30
+# total_pages = 0
+# uptoPage = 10
+# r = requests.get(url + tableName,
+#                   params = {
+#                       "page": pageNum,
+#                       "size": numData
+#                   },
+#                   headers = {
+#                       "Authorization": "token "+ token
+#                   })
 
-resp = r.json()
-# print("response is: \n", resp)
+# resp = r.json()
+# # print("response is: \n", resp)
 

@@ -58,8 +58,24 @@ indices=pd.Series(range(0, data_course_list['course_name'].size),index = data_co
 indicesPkl = indices
 # indicesPkl = pd.read_pickle('indices_content_based.pkl')
 
+# =======================================
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+import sklearn
+from numba import jit, cuda
+
+@jit(target_backend = 'cuda')
+def makeCosineSimilarityMatrix(_df: pd.DataFrame, based_on_col: str) -> np.ndarray:
+  count: sklearn.feature_extraction.text.TfidfVectorizer =TfidfVectorizer()
+  count_matrix = count.fit_transform(_df[based_on_col])
+  cosine_sim = cosine_similarity(count_matrix,count_matrix)
+  return cosine_sim
+finalCourseList = pd.read_pickle("oct19_2023/preprocessedCourseInfoDf_oct19.pkl")
+cosine_sim = makeCosineSimilarityMatrix(finalCourseList, "tag")
+# =======================================
 # cosine_sim = np.load('oct19_2023/cosineSim_Oct19.pkl', allow_pickle=True)
-cosine_sim = modelImports.cosine_sim
+# cosine_sim = np.load("models/content_based/cosineSim.pkl")
 # cosine_sim = pkl.load(open('MLComponent/cosine_sim.pkl', 'rb'))
 
 
@@ -68,23 +84,49 @@ def content_based(course_id, data=data_df, indices=indices, cosine_sim=cosine_si
     status, msg = utilsFunctions.checkCourseInDb(course_id)
     if not status: 
       return msg
-
+    res_dict = {}
+    provided_course_df = data.loc[data["id"] == course_id, :]
+    provided_course = data.loc[data["id"] == course_id, :].to_dict("records")
     id=indices[course_id]
     sim=[(index, cosine_sim[id][index]) for index in range(len(cosine_sim[id]))]
-    sim=sorted(sim,key=lambda x:x[1],reverse=True)
-    sim=sim[1:15]
+    
+    sim = sorted([item for item in sim if item[1] > 0.2],key=lambda x:x[1],reverse=True)# Sort the course based on the cosine similarity scores > 0.2
+    sim = sim[1:]#Ignore the first course
+
+    # sim=sorted(sim,key=lambda x:x[1],reverse=True)
+    # sim=sim[1:15]
     index=[i[0] for i in sim]
     recommended_lst = list(data['course_name'].iloc[index])
     
     recommended_lst_dict_temp = []
-    for x in recommended_lst:
+    for x in recommended_lst:      
+      c1 = data[data["course_name"]== x]
+      c_code_c1 = c1.loc[:, "center_code"].tolist()[0]
+      c_code_pCourse = provided_course_df.loc[:, "center_code"].tolist()[0]
+      print("c_code_c1: ", c_code_c1, c_code_pCourse)
+      if (c_code_c1 ==  c_code_pCourse): 
+        recommended_lst_dict_temp.append(c1.to_dict('records'))
+
         recommended_lst_dict_temp.append(data[data["course_name"]== x].to_dict('records'))
     
     recommended_lst_dict = []
     for i in range(0, len(recommended_lst_dict_temp)):
         recommended_lst_dict.append(recommended_lst_dict_temp[i][0])     
+
     
-    return recommended_lst_dict
+    # finalRecommendationLst = []
+    # for j in recommended_lst_dict:
+    #   # center_code_filter = j['center_code'] == provided_course['center_code']
+    #   # checking whether the course has same center_code
+    #   if(not (j['center_code'] == provided_course['center_code'])):
+    #     break
+
+    #   finalRecommendationLst.append(j)
+
+    res_dict["provided_course"] = provided_course
+    res_dict["recommended_courses"] = recommended_lst_dict
+    
+    return res_dict
 
 # Basis of Rating
 def embed_user_information(userid, embed_for="rating"):
