@@ -78,6 +78,14 @@ def buildModel_forRating(request):
 @api_view(['GET'])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
+def buildModel_forNcfRating(request): 
+    df_dict = ml_models.buildModelForNCF()
+    return HttpResponse(json.dumps(df_dict), content_type='application/json')
+
+
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def buildModel_forQuiz(request): 
     trainset, testset = ml_models.trainset_and_testset_quiz()
     df_dict = ml_models.train_and_test_svdModel(trainset, testset, "quiz")

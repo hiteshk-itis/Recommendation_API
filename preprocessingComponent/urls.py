@@ -29,4 +29,7 @@ urlpatterns = [
     path('retrieve_raw_tables/<slug:tableName>', views.retrieveRawTables), 
     path('preprocess_raw_tables/<slug:tableName>', views.preprocessRawTables), 
     path('batch_update', views.batchUpdate), 
+    path('preprocess_all_tables/', views.preprocessAllTables),
+    path('build_all_models/', views.buildAllModels)
+    
 ]

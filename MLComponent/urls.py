@@ -33,6 +33,7 @@ urlpatterns = [
     path('build_model/rating/', views.buildModel_forRating),
     path('build_model/quiz/', views.buildModel_forQuiz),
     path('build_model/assignment/', views.buildModel_forAssn),
+    path('build_model/ncf_rating/', views.buildModel_forNcfRating),
 
     path('get_recommendation/content_based/<int:search_param>/', views.contentBasedRec), 
     # path('get_recommendation/<slug:search_param>/', views.contentBasedRec), 

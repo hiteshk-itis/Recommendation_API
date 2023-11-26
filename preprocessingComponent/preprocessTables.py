@@ -197,7 +197,7 @@ def preprocessTables(tableName: str):
             ) for tags_raw_record in df.to_dict('records')
         ]
 
-  elif tableName == "course_info": 
+  elif tableName == "course-info": 
     df = preprocessCourseInfo()
     model_df = CourseInfoPreprocessed
 
@@ -210,7 +210,7 @@ def preprocessTables(tableName: str):
         )
             for courseInfo_raw_record in df.to_dict('records')
         ]
-  elif tableName == "user_list": 
+  elif tableName == "user-list": 
     df = preprocessUserList()
     model_df = UserListPreprocessed
     model_instances = [
@@ -240,7 +240,7 @@ def preprocessTables(tableName: str):
                 center_code = userList_raw_record["center_code"]
             ) for userList_raw_record in df.to_dict('records')
         ]
-  elif tableName == "course_ratings":
+  elif tableName == "course-ratings":
     df = preprocessCourseRatings()
     model_df = CourseRatingPreprocessed
     model_instances = [
@@ -251,12 +251,12 @@ def preprocessTables(tableName: str):
             ) for courseRatings_raw_record in df.to_dict('records')
         ]
   else: 
-    return {"status": "invalid table name."}
+    return {"status": f"invalid table name {tableName}"}
 
   if len(model_df.objects.all()): 
         model_df.objects.all().delete()
 
   model_df.objects.bulk_create(model_instances)
   
-  return {"status": "preprocessed data updated."}
+  return {"status": f"preprocessed {tableName} data updated"}
   

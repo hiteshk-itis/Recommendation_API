@@ -45,3 +45,31 @@ def batchUpdate(request):
         "modeling done": status_model
     }
     return HttpResponse(json.dumps(status), content_type='application/json')
+
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def preprocessAllTables(request): 
+    # status_raw = retrieveAllRawTables()
+    status_preprocess = preprocessAllRawTables()
+    # status_model = modelForAllAlgorithms()
+    status = {
+        # "raw Tables Retrieved": status_raw, 
+        "raw Tables preprocessed": status_preprocess, 
+        # "modeling done": status_model
+    }
+    return HttpResponse(json.dumps(status), content_type='application/json')
+
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def buildAllModels(request): 
+    # status_raw = retrieveAllRawTables()
+    status_build = modelForAllAlgorithms()
+    # status_model = modelForAllAlgorithms()
+    status = {
+        # "raw Tables Retrieved": status_raw, 
+        "build models": status_build, 
+        # "modeling done": status_model
+    }
+    return HttpResponse(json.dumps(status), content_type='application/json')

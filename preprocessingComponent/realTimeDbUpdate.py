@@ -1,9 +1,15 @@
 from .retrieveRawTables import retrieveTables
 from .models import UserListRaw, CourseInfoRaw, CourseRatingRaw, TagsRaw
+
+from .preprocessTables import preprocessTables
+
+from MLComponent import ml_models
+
+tableNames = ["course-info","course-rating", "tag", "user-list"]
+modelNames = [UserListRaw, CourseInfoRaw, CourseRatingRaw, TagsRaw]
+
 # retrieve tables
 def retrieveAllRawTables(): 
-    tableNames = ["course-info","course-rating", "tag", "user-list"]
-    modelNames = [UserListRaw, CourseInfoRaw, CourseRatingRaw, TagsRaw]
     # Raw
     # course_info raw
     for modelName in modelNames: 
@@ -34,13 +40,23 @@ def preprocessAllRawTables():
     # course_info preprocessed
     # tags preprocessed
     # course_ratings preprocessed
+
+    status_courseRatings = preprocessTables("course-ratings")
     # user_list preprocessed
-    pass
+    status_userList = preprocessTables("user-list")
+    return {"status_courseRatings": status_courseRatings, "status_userList": status_userList}
+    
 
 def modelForAllAlgorithms(): 
     # modeling
-    pass
+    # SVD
+    trainset, testset = ml_models.trainset_and_testset_rating()
+    status_svd = ml_models.train_and_test_svdModel(trainset, testset, "rating")
 
+    # NCF
+    status_ncf = ml_models.buildModelForNCF()
+
+    return {"status_svd": status_svd, "status_ncf": status_ncf}
 # content_based
 # cosine_sim 
 # predictions_rating_df

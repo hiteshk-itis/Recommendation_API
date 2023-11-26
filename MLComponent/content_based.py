@@ -185,7 +185,7 @@ def SVD_rating(userid, get_recommend =5):
   res_dict = embed_user_information(userid)
   res_dict['recommended_courses'] = []
 
-  preds, model = load("SVD_model.pkl")
+  preds, model = load(f"{dataImports.SVDModelsFolder}/SVD_model.pkl")
   trainset, testset = trainset_and_testset_rating()
 
   # build testset for specific user
@@ -296,9 +296,9 @@ from libreco.evaluation import evaluate
 
 # rating_cpy.columns = ['user','item','label']
 
-load_data_info = DataInfo.load('data_info_rating',model_name='ncfModelRating')
+load_data_info = DataInfo.load(f'{dataImports.NCFModelsFolder}/data_info_rating',model_name='ncfModelRating')
 
-model1 = NCF.load('model_rating',model_name='ncfModelRating',data_info = load_data_info)
+model1 = NCF.load(f'{dataImports.NCFModelsFolder}/model_rating',model_name='ncfModelRating',data_info = load_data_info)
 
 
 def NCF_rating_api(

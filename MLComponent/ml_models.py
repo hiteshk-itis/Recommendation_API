@@ -3,6 +3,7 @@
 
 from .models import PredictionsRatingDf,PredictionsQuizDf,PredictionsAssnDf
 from preprocessingComponent.models import CourseRatingPreprocessed
+from courseRecoSystem.imports import dataImports
 
 from surprise import Reader, Dataset
 from surprise.model_selection import train_test_split, cross_validate, GridSearchCV
@@ -91,7 +92,8 @@ def train_and_test_svdModel(trainset, testset, model_for):
 
     model = SVD(n_factors=10,n_epochs=20,lr_all=0.005,reg_all=0.2)
     model.fit(trainset)
-    dump(file_name = "SVD_model.pkl", algo = model)
+    
+    dump(file_name = f"{dataImports.SVDModelsFolder}/SVD_model.pkl", algo = model)
     # build_anti_testset() user-item matrix of all the items not interacted by user 
     
     # predictions = model.test(testset)
@@ -144,3 +146,24 @@ def storeAsPkl(data, path):
     f = open(path, "wb")
     pickle.dump(data, f)
     f.close()
+
+
+from libreco.data import random_split, DatasetPure
+from libreco.algorithms import NCF
+from libreco.evaluation import evaluate
+import tensorflow as tf
+def buildModelForNCF(): 
+    rating = pd.DataFrame.from_records(CourseRatingPreprocessed.objects.all().values('student', 'course_code', 'rating'))
+    rating_cpy = rating.copy()
+    rating_cpy.columns = ['user','item','label']
+    train_data_full, data_info_full= DatasetPure.build_trainset(rating_cpy)
+
+    tf.compat.v1.reset_default_graph()
+    model1 = NCF(task="rating",data_info=data_info_full,loss_type="cross_entropy",embed_size= 8,n_epochs=30,lr=1e-3,batch_size=16,num_neg=1,)
+
+    model1.fit(train_data_full,neg_sampling=False, verbose = 2,metrics=["loss","rmse"],)
+
+    data_info_full.save(f"{dataImports.NCFModelsFolder}/data_info_rating",model_name='ncfModelRating')
+    model1.save(f"{dataImports.NCFModelsFolder}/model_rating",model_name='ncfModelRating')
+
+    return {"status": "NCF Model and data_info saved"}
