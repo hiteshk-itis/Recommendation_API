@@ -2,7 +2,7 @@ from .retrieveRawTables import retrieveTables
 from .models import UserListRaw, CourseInfoRaw, CourseRatingRaw, TagsRaw
 # retrieve tables
 def retrieveAllRawTables(): 
-    tableNames = ["course-rating", "tag", "user-list"]
+    tableNames = ["course-info","course-rating", "tag", "user-list"]
     modelNames = [UserListRaw, CourseInfoRaw, CourseRatingRaw, TagsRaw]
     # Raw
     # course_info raw
