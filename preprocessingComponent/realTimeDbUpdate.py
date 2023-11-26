@@ -38,13 +38,13 @@ def retrieveAllRawTables():
 def preprocessAllRawTables(): 
     # Preprocess
     # course_info preprocessed
+    status_courseInfo = preprocessTables("course-info")
     # tags preprocessed
     # course_ratings preprocessed
-
     status_courseRatings = preprocessTables("course-ratings")
     # user_list preprocessed
     status_userList = preprocessTables("user-list")
-    return {"status_courseRatings": status_courseRatings, "status_userList": status_userList}
+    return {"status_courseInfo ": status_courseInfo,"status_courseRatings": status_courseRatings, "status_userList": status_userList}
     
 
 def modelForAllAlgorithms(): 
