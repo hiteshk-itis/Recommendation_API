@@ -14,5 +14,3 @@ data_info_rating
 model_rating
 shell_cmds
 gunicorn.conf.py
-courseRecoSystem/urls.py
-courseRecoSystem/settings.py
