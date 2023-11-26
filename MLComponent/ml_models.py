@@ -8,14 +8,14 @@ from surprise import Reader, Dataset
 from surprise.model_selection import train_test_split, cross_validate, GridSearchCV
 from surprise import KNNBasic, KNNWithMeans, KNNWithZScore, KNNBaseline, SVD
 from surprise import accuracy
-
+from surprise.dump import dump
 import pandas as pd
 import random
 
 
 def trainset_and_testset_rating(): 
     
-    rating = pd.DataFrame.from_records(CourseRatingPreprocessed.objects.all().values())
+    rating = pd.DataFrame.from_records(CourseRatingPreprocessed.objects.all().values('student', 'course_code', 'rating'))
 
     reader = Reader(rating_scale=(0,5))
     data = Dataset.load_from_df(rating,reader)
@@ -91,28 +91,29 @@ def train_and_test_svdModel(trainset, testset, model_for):
 
     model = SVD(n_factors=10,n_epochs=20,lr_all=0.005,reg_all=0.2)
     model.fit(trainset)
-    
+    dump(file_name = "SVD_model.pkl", algo = model)
     # build_anti_testset() user-item matrix of all the items not interacted by user 
     
-    predictions = model.test(testset)
-    predictions_df = pd.DataFrame(predictions)
+    # predictions = model.test(testset)
+    # predictions_df = pd.DataFrame(predictions)
     
-    predictions_records = predictions_df.to_dict('records')
+    # predictions_records = predictions_df.to_dict('records')
     
-    if len(model_df.objects.all()): 
-        model_df.objects.all().delete()
+    # if len(model_df.objects.all()): 
+    #     model_df.objects.all().delete()
 
-    model_instances = [
-        model_df(
-            uid = predictions_record['uid'], 
-            iid = predictions_record['iid'], 
-            r_ui = predictions_record['r_ui'], 
-            est = predictions_record['est'], 
-            details = predictions_record['details'], 
-        )
-        for predictions_record in predictions_records
-    ]
-    model_df.objects.bulk_create(model_instances)
+    # model_instances = [
+    #     model_df(
+    #         uid = predictions_record['uid'], 
+    #         iid = predictions_record['iid'], 
+    #         r_ui = predictions_record['r_ui'], 
+    #         est = predictions_record['est'], 
+    #         details = predictions_record['details'], 
+    #     )
+    #     for predictions_record in predictions_records
+    # ]
+    # model_df.objects.bulk_create(model_instances)
+    predictions_records = {"status": "SVD Model saved"}
     return predictions_records
 
 from sklearn.feature_extraction.text import CountVectorizer

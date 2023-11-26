@@ -6,6 +6,8 @@ import numpy as np
 import pandas as pd
 import neattext.functions as nfx
 
+# classes: making pipelines
+## preprocessing CourseList Pipeline
 class PreprocessingCourseList:
 
   def __init__(self, _df: pd.DataFrame):
@@ -57,7 +59,7 @@ import re
 import numpy as np
 from numba import jit, cuda
 
-# preprocessing Tags Pipeline
+## preprocessing Tags Pipeline
 class PreprocessingTags: 
   def __init__(self, _df: pd.DataFrame): 
     self.df = _df.copy()
@@ -115,7 +117,73 @@ class PreprocessingTags:
     return self.df
    
 
+# Functions: Making use of pipelines
 
+def preprocessTags(): 
+  try: 
+    tagsTableObj
+  except: 
+    varExists = False
+  else: 
+    varExists = True
+
+  if varExists: 
+    del tagsTableObj
+
+  tagsRaw = pd.DataFrame.from_records(TagsRaw.objects.all().values())
+  tagsTableObj = PreprocessingTags(tagsRaw)
+  tagsTableObj.makeColNamesLowerCase()
+  tagsTableObj.makeValsLowerCase()
+  tagsTableObj.removeUsingRegex()
+  tagsTableObj.translateTags()
+  tagsTableObj.truncateDf()
+  tagsTableObj.takeStemVals()
+  tagsTableObj.updateTagsColumnInTable()
+  return tagsTableObj.getDf()
+
+def preprocessCourseInfo(): 
+  try: 
+    courseListObj
+  except: 
+    varExists = False
+  else: 
+    varExists = True
+
+  if varExists: 
+    del courseListObj
+
+  courseInfoRawDf = pd.DataFrame.from_records(CourseInfoRaw.objects.all().values())
+  preprocessedTags = pd.DataFrame.from_records(TagsPreprocessed.objects.all().values())
+
+  courseListObj = PreprocessingCourseList(courseInfoRawDf)
+  courseListObj.makeColNamesLowerCase()
+  # courseListObj.convertToListOfIntegers()
+  courseListObj.truncateDf()
+  courseListObj.changeTagColToTagNames(preprocessedTags)
+  courseListObj.joinValsInList()
+  courseListObj.convertTagColumnToLowerCase()
+  courseListObj.makeNLPChanges()
+  return courseListObj.getDf()
+  
+def preprocessUserList(): 
+  user_list = pd.DataFrame.from_records(UserListRaw.objects.all().values())
+
+  # user_list["register_datetime"] = user_list["register_datetime"].apply(lambda x: datetime.strptime(x, '%Y-%m-%dT%H:%M:%S.%fZ'))
+
+  # user_list["updated_datetime"] = user_list["updated_datetime"].apply(lambda x: datetime.strptime(x, '%Y-%m-%dT%H:%M:%S.%fZ'))
+  return user_list
+
+def preprocessCourseRatings(): 
+
+  course_rating = pd.DataFrame.from_records(CourseRatingRaw.objects.all().values())
+  dfGrpByStdCourse = course_rating.groupby(['student', 'course_code'])
+  dfGrpByStdCourseCount = pd.DataFrame(dfGrpByStdCourse.count())
+  dfGrpByStdCourseMean = pd.DataFrame(dfGrpByStdCourse.mean())
+  dfGrpByStdCourseMean.sort_values('rating', ascending=False)
+  stdCourseMap = pd.DataFrame(dfGrpByStdCourseMean['rating']).reset_index()
+  return stdCourseMap  
+  
+# The main function to be called
 def preprocessTables(tableName: str):   
   if tableName == "tags": 
     df = preprocessTags()
@@ -192,65 +260,3 @@ def preprocessTables(tableName: str):
   
   return {"status": "preprocessed data updated."}
   
-def preprocessTags(): 
-  try: 
-    tagsTableObj
-  except: 
-    varExists = False
-  else: 
-    varExists = True
-
-  if varExists: 
-    del tagsTableObj
-
-  tagsRaw = pd.DataFrame.from_records(TagsRaw.objects.all().values())
-  tagsTableObj = PreprocessingTags(tagsRaw)
-  tagsTableObj.makeColNamesLowerCase()
-  tagsTableObj.makeValsLowerCase()
-  tagsTableObj.removeUsingRegex()
-  tagsTableObj.translateTags()
-  tagsTableObj.truncateDf()
-  tagsTableObj.takeStemVals()
-  tagsTableObj.updateTagsColumnInTable()
-  return tagsTableObj.getDf()
-
-def preprocessCourseInfo(): 
-  try: 
-    courseListObj
-  except: 
-    varExists = False
-  else: 
-    varExists = True
-
-  if varExists: 
-    del courseListObj
-
-  courseInfoRawDf = pd.DataFrame.from_records(CourseInfoRaw.objects.all().values())
-  preprocessedTags = pd.DataFrame.from_records(TagsPreprocessed.objects.all().values())
-
-  courseListObj = PreprocessingCourseList(courseInfoRawDf)
-  courseListObj.makeColNamesLowerCase()
-  # courseListObj.convertToListOfIntegers()
-  courseListObj.truncateDf()
-  courseListObj.changeTagColToTagNames(preprocessedTags)
-  courseListObj.joinValsInList()
-  courseListObj.convertTagColumnToLowerCase()
-  courseListObj.makeNLPChanges()
-  return courseListObj.getDf()
-  
-def preprocessUserList(): 
-  user_list = pd.DataFrame.from_records(UserListRaw.objects.all().values())
-
-  # user_list["register_datetime"] = user_list["register_datetime"].apply(lambda x: datetime.strptime(x, '%Y-%m-%dT%H:%M:%S.%fZ'))
-
-  # user_list["updated_datetime"] = user_list["updated_datetime"].apply(lambda x: datetime.strptime(x, '%Y-%m-%dT%H:%M:%S.%fZ'))
-  return user_list
-
-def preprocessCourseRatings(): 
-  course_rating = pd.DataFrame.from_records(CourseRatingRaw.objects.all().values())
-  dfGrpByStdCourse = course_rating.groupby(['student', 'course_code'])
-  dfGrpByStdCourseCount = pd.DataFrame(dfGrpByStdCourse.count())
-  dfGrpByStdCourseMean = pd.DataFrame(dfGrpByStdCourse.mean())
-  dfGrpByStdCourseMean.sort_values('rating', ascending=False)
-  stdCourseMap = pd.DataFrame(dfGrpByStdCourseMean['rating']).reset_index()
-  return stdCourseMap  

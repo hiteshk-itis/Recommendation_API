@@ -2,8 +2,9 @@ from courseRecoSystem.imports import dataImports
 from courseRecoSystem import utilsFunctions
 from .imports import modelImports
 from .models import PredictionsRatingDf
-
+from surprise.dump import load
 from courseRecoOne.models import CourseList, UserList
+from .ml_models import trainset_and_testset_rating
 
 import pickle as pkl
 import pandas as pd
@@ -176,25 +177,40 @@ def embed_user_information(userid, embed_for="rating"):
 
 def SVD_rating(userid, get_recommend =5):
 
-
   status, msg = utilsFunctions.checkUserInDb(userid)
   if not status: 
     return msg
 
+  baselineRating = 3
   res_dict = embed_user_information(userid)
   res_dict['recommended_courses'] = []
 
-  predictions_df = modelImports.predictions_df
-  predictions_userID = predictions_df[predictions_df['uid'] == userid].sort_values(by="est", ascending = False).head(5) 
+  preds, model = load("SVD_model.pkl")
+  trainset, testset = trainset_and_testset_rating()
+
+  # build testset for specific user
+  testsetDf = pd.DataFrame(trainset.build_anti_testset(), columns = ["uid", "iid", "rating"])
+  unInteractedCourses = testsetDf[testsetDf["uid"] == userid]["iid"].to_list()
+
+  est_ratings = []
+  for course in unInteractedCourses: 
+    est_rating = model.predict(userid, course).est
+    if est_rating >= baselineRating:
+      est_ratings.append(est_rating)
+
+  iid_est_map = pd.Series(est_ratings, index = unInteractedCourses)
+
+  # predictions_df = modelImports.predictions_df
+  # predictions_userID = predictions_df[predictions_df['uid'] == userid].sort_values(by="est", ascending = False).head(5) 
   
-  if (predictions_userID.empty): 
+  if (iid_est_map.empty): 
     return res_dict
 
   # Series with index as the course_id and values as est rating
-  iid_est_map = pd.Series(predictions_userID['est'].values.tolist(), index = predictions_userID['iid'].values.tolist())
+  # iid_est_map = pd.Series(predictions_userID['est'].values.tolist(), index = predictions_userID['iid'].values.tolist())
 
   recommendations_id = []
-  recommendations_id.append(list(predictions_userID['iid']))
+  recommendations_id.append(list(unInteractedCourses))
   recommendations_id=recommendations_id[0]
   recommendations_subject = []
   recommended_courses = []
