@@ -9,22 +9,19 @@ from courseRecoSystem.utilsFunctions import applyDictKeysLowerCase
 from .models import UserListRaw, CourseInfoRaw, CourseRatingRaw, TagsRaw
 from courseRecoSystem import utilsFunctions
 
-KOREAN_URL = os.getenv('KOREAN_URL')
-KOREAN_TOKEN = os.getenv('KOREAN_TOKEN')
-INDONESIAN_URL = os.getenv('INDONESIAN_URL')
-INDONESIAN_TOKEN = os.getenv('INDONESIAN_TOKEN')
-RECO_URL = os.getenv('RECO_URL')
-RECO_TOKEN = os.getenv('RECO_TOKEN')
+# KOREAN_URL = os.getenv('KOREAN_URL')
+# KOREAN_TOKEN = os.getenv('KOREAN_TOKEN')
+# INDONESIAN_URL = os.getenv('INDONESIAN_URL')
+# INDONESIAN_TOKEN = os.getenv('INDONESIAN_TOKEN')
+# RECO_URL = os.getenv('RECO_URL')
+# RECO_TOKEN = os.getenv('RECO_TOKEN')
+
+API_URL = os.getenv('API_URL')
+API_TOKEN = os.getenv('API_TOKEN')
 
 def getDataFrameFromAPI(tableName:str = "", serverName:str = "indonesian", startPage: int = 1, numData: int | str = 20, uptoPage: int = None) -> pd.DataFrame | dict:
-  if serverName == "indonesian":
-    url = INDONESIAN_URL
-    token = INDONESIAN_TOKEN
-  elif serverName == "korean":
-    url = KOREAN_URL
-    token = KOREAN_TOKEN
-  else:
-    raise Exception("serverName Error: either `indonesian` or `korean`")
+  url = API_URL
+  token = API_TOKEN
 
   tableNameFunctionMap = {
     "course-info": saveIntoCourseInfo, 
@@ -32,6 +29,15 @@ def getDataFrameFromAPI(tableName:str = "", serverName:str = "indonesian", start
     "tag": saveIntoTags, 
     "user-list": saveIntoUserList, 
   }
+  tableNameModelMap = {
+    "course-info": CourseInfoRaw, 
+    "course-rating": CourseRatingRaw, 
+    "tag": TagsRaw, 
+    "user-list": UserListRaw, 
+  }
+
+  if len(tableNameModelMap[tableName].objects.all()):
+    tableNameModelMap[tableName].objects.all().delete()
 
   result = []
   if numData == "all":
@@ -77,6 +83,8 @@ def getDataFrameFromAPI(tableName:str = "", serverName:str = "indonesian", start
       resp = r.json()
       total_pages = resp["total_pages"]
       
+      
+
       print(f"reading page: {pageNum}/{total_pages}")
       if "results" in list(resp.keys()):
         result.extend(resp["results"])
@@ -120,8 +128,6 @@ def makeColNamesLowerCase(df:pd.DataFrame) -> list:
   return df
 
 def retrieveTables(tableName: str, currPageNum = 1, _uptoPage = 40): 
-    url = INDONESIAN_URL
-    token = INDONESIAN_TOKEN
     pageNum = currPageNum
     numData = 30
     total_pages = 0
@@ -132,6 +138,20 @@ def retrieveTables(tableName: str, currPageNum = 1, _uptoPage = 40):
 
     status, total_pages, pageNum = getDataFrameFromAPI(tableName, startPage = currPageNum, numData = 30, uptoPage = _uptoPage)
     return status, total_pages, pageNum
+
+def retrieveSingleTable(tableName:str, currPageNum = 1, _uptoPage = 40):
+  ttlPages = 0
+  currPageNum = 1
+  status = False
+  while (ttlPages != currPageNum): 
+      status, ttlPages, currPageNum = retrieveTables(tableName, currPageNum, currPageNum+9)
+      if type(status) == bool: 
+          print("LOOP ITERATION CHANGED", status, ttlPages, currPageNum, tableName)
+      else: 
+          return status
+  if status: 
+      return {"status": f"table {tableName} updated with new data"}
+
 
 def saveIntoCourseInfo(courseInfo_raw): 
   model_df = CourseInfoRaw

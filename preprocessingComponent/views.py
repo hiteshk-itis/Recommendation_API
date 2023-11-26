@@ -11,7 +11,7 @@ from rest_framework.views import APIView
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
-from .retrieveRawTables import retrieveTables
+from .retrieveRawTables import retrieveTables, retrieveSingleTable
 from .preprocessTables import preprocessTables
 import json
 from .realTimeDbUpdate import *
@@ -20,8 +20,8 @@ from .realTimeDbUpdate import *
 @api_view(['GET'])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
-def retrieveRawTables(request, tableName): 
-    status = retrieveTables(tableName)
+def retrieve_singleTable(request, tableName): 
+    status = retrieveSingleTable(tableName)
     return HttpResponse(json.dumps(status), content_type='application/json')
 
 
