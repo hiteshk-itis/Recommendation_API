@@ -1,7 +1,7 @@
 from courseRecoSystem.imports import dataImports
 from courseRecoSystem import utilsFunctions
-from .imports import modelImports
-from .models import PredictionsRatingDf
+# from .imports import modelImports
+# from .models import PredictionsRatingDf
 from surprise.dump import load
 from courseRecoOne.models import CourseList, UserList
 from .ml_models import trainset_and_testset_rating

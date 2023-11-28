@@ -41,7 +41,7 @@ def preprocessAllRawTables():
     status_courseInfo = preprocessTables("course-info")
     # tags preprocessed
     # course_ratings preprocessed
-    status_courseRatings = preprocessTables("course-ratings")
+    status_courseRatings = preprocessTables("course-rating")
     # user_list preprocessed
     status_userList = preprocessTables("user-list")
     return {"status_courseInfo ": status_courseInfo,"status_courseRatings": status_courseRatings, "status_userList": status_userList}

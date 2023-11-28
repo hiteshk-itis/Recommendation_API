@@ -15,6 +15,7 @@ class PreprocessingCourseList:
     self.df.name = "course_list"
     self.colToChange = "tag"
     self.resultCols = ["id", "course_name", "tag", "center_code"]
+    self.df = self.df.dropna(subset=['center_code'])
 
   def makeColNamesLowerCase(self) -> list:
     self.df.columns = [str.lower(str(val)) for val in self.df.columns]
@@ -35,10 +36,17 @@ class PreprocessingCourseList:
 
   def joinValsInList(self):
     for i in range(len(self.df[self.colToChange])):
-        if self.df[self.colToChange][i]!=[]:
-            self.df[self.colToChange][i]=' '.join(self.df[self.colToChange][i])
-        else:
-            self.df[self.colToChange][i]=' '.join(self.df[self.colToChange][i])
+      if i == 97: 
+        self.df[self.colToChange][i]=''
+        continue
+      val = self.df[self.colToChange][i]
+      val1 = type(self.df[self.colToChange][i])
+      val2 = self.df[self.colToChange]
+      l = len(self.df[self.colToChange])
+      if self.df[self.colToChange][i]!=[]:
+          self.df[self.colToChange][i]=' '.join(self.df[self.colToChange][i])
+      else:
+          self.df[self.colToChange][i]=' '.join(self.df[self.colToChange][i])
     return self.df[self.colToChange]
 
   def convertTagColumnToLowerCase(self):
@@ -160,9 +168,13 @@ def preprocessCourseInfo():
   # courseListObj.convertToListOfIntegers()
   courseListObj.truncateDf()
   courseListObj.changeTagColToTagNames(preprocessedTags)
+  finalTable3 = courseListObj.getDf()
   courseListObj.joinValsInList()
+  finalTable4 = courseListObj.getDf()
   courseListObj.convertTagColumnToLowerCase()
   courseListObj.makeNLPChanges()
+  finalTable = courseListObj.getDf()
+  print("##################",courseListObj.getDf().iloc[0, :])
   return courseListObj.getDf()
   
 def preprocessUserList(): 
@@ -185,6 +197,17 @@ def preprocessCourseRatings():
   
 # The main function to be called
 def preprocessTables(tableName: str):   
+  tableNameModelMap = {
+    "course-info": CourseInfoPreprocessed, 
+    "course-rating": CourseRatingPreprocessed, 
+    "tag": TagsPreprocessed, 
+    "user-list": UserListPreprocessed, 
+  }
+
+  if len(tableNameModelMap[tableName].objects.all()):
+    tableNameModelMap[tableName].objects.all().delete()
+
+
   if tableName == "tags": 
     df = preprocessTags()
     # df = pd.read_pickle("oct19_2023/tag_preprocessed.pkl")
@@ -240,7 +263,7 @@ def preprocessTables(tableName: str):
                 center_code = userList_raw_record["center_code"]
             ) for userList_raw_record in df.to_dict('records')
         ]
-  elif tableName == "course-ratings":
+  elif tableName == "course-rating":
     df = preprocessCourseRatings()
     model_df = CourseRatingPreprocessed
     model_instances = [

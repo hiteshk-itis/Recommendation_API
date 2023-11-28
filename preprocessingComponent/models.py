@@ -1,4 +1,6 @@
 from django.db import models
+from django.core.exceptions import ValidationError
+import math 
 
 # Create your models here.
 class UserListRaw(models.Model): 
@@ -46,6 +48,16 @@ class CourseInfoRaw(models.Model):
     center_code = models.IntegerField(blank=True, null=True)
     tag = models.TextField(blank=True, null=True)
 
+    def clean(self):
+        # Check if the field value is NaN
+        if math.isnan(self.center_code):
+            # Set the field value to None
+            self.center_code = None
+
+    def save(self, *args, **kwargs):
+        # Call the clean method before saving
+        self.clean()
+        super().save()
 
 
 class CourseRatingRaw(models.Model):
@@ -55,6 +67,7 @@ class CourseRatingRaw(models.Model):
     student = models.IntegerField(blank=True, null=True)
     course_code = models.IntegerField(blank=True, null=True)
     center_code = models.IntegerField(blank=True, null=True)
+
 
 class TagsRaw(models.Model): 
     id = models.IntegerField(primary_key=True)
@@ -104,7 +117,20 @@ class CourseInfoPreprocessed(models.Model):
     center_code = models.IntegerField(blank=True, null=True)
     tag = models.TextField(blank=True, null=True)
     
+    def clean(self):
+        # Check if the field value is NaN
+        if math.isnan(self.center_code):
+            # Set the field value to None
+            self.center_code = None
 
+    def save(self, *args, **kwargs):
+        # Call the clean method before saving
+        self.clean()
+        super().save()
+
+    def bulk_create(self, *args, **kwargs): 
+        self.clean()
+        super().save()
 
 
 class CourseRatingPreprocessed(models.Model):
