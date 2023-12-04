@@ -19,6 +19,13 @@ from courseRecoSystem import utilsFunctions
 API_URL = os.getenv('API_URL')
 API_TOKEN = os.getenv('API_TOKEN')
 
+tableNameModelMap = {
+    "course-info": CourseInfoRaw, 
+    "course-rating": CourseRatingRaw, 
+    "tag": TagsRaw, 
+    "user-list": UserListRaw, 
+  }
+
 def getDataFrameFromAPI(tableName:str = "", serverName:str = "indonesian", startPage: int = 1, numData: int | str = 20, uptoPage: int = None) -> pd.DataFrame | dict:
   url = API_URL
   token = API_TOKEN
@@ -29,15 +36,9 @@ def getDataFrameFromAPI(tableName:str = "", serverName:str = "indonesian", start
     "tag": saveIntoTags, 
     "user-list": saveIntoUserList, 
   }
-  tableNameModelMap = {
-    "course-info": CourseInfoRaw, 
-    "course-rating": CourseRatingRaw, 
-    "tag": TagsRaw, 
-    "user-list": UserListRaw, 
-  }
+  
 
-  if len(tableNameModelMap[tableName].objects.all()):
-    tableNameModelMap[tableName].objects.all().delete()
+  
 
   result = []
   if numData == "all":
@@ -143,6 +144,10 @@ def retrieveSingleTable(tableName:str, currPageNum = 1, _uptoPage = 40):
   ttlPages = 0
   currPageNum = 1
   status = False
+
+  if len(tableNameModelMap[tableName].objects.all()):
+    tableNameModelMap[tableName].objects.all().delete()
+
   while (ttlPages != currPageNum): 
       status, ttlPages, currPageNum = retrieveTables(tableName, currPageNum, currPageNum+9)
       if type(status) == bool: 

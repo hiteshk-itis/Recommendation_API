@@ -143,6 +143,9 @@ def embed_user_information(userid, embed_for="rating"):
     rated_courses_id = rating.loc[rating['student'] == userid, ['course_code', 'rating']].values.tolist()
     rated_courses = []
     for i in rated_courses_id:
+      status, msg = utilsFunctions.checkCourseInDb(i[0])
+      if not status: 
+        continue
       rated_course_dict = data_course_list.loc[data_course_list['id'] == i[0], ['id', 'course_name', 'center_code']].to_dict('records')[0]
       rated_course_dict['rated'] = round(i[1], 2)
       rated_course_dict['course_url'] = os.path.join(os.getenv('BASE_URL'), 'course_list', str(int(i[0])))
