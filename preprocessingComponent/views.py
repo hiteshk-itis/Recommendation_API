@@ -84,4 +84,3 @@ def retrieveAllTables(request):
 
     }
     return HttpResponse(json.dumps(status), content_type='application/json')
-
