@@ -88,10 +88,10 @@ def content_based(course_id, data=data_df, indices=indices, cosine_sim=cosine_si
     res_dict = {}
     provided_course_df = data.loc[data["id"] == course_id, :]
     provided_course = data.loc[data["id"] == course_id, :].to_dict("records")
-    id=indices[course_id]
+    id=indices[provided_course[0]["course_name"]]
     sim=[(index, cosine_sim[id][index]) for index in range(len(cosine_sim[id]))]
     
-    sim = sorted([item for item in sim if item[1] > 0.2],key=lambda x:x[1],reverse=True)# Sort the course based on the cosine similarity scores > 0.2
+    sim = sorted([item for item in sim if item[1] > 0.2],key=lambda x:x[1],reverse=True) # Sort the course based on the cosine similarity scores > 0.2
     sim = sim[1:]#Ignore the first course
 
     # sim=sorted(sim,key=lambda x:x[1],reverse=True)
@@ -196,12 +196,14 @@ def SVD_rating(userid, get_recommend =5):
   unInteractedCourses = testsetDf[testsetDf["uid"] == userid]["iid"].to_list()
 
   est_ratings = []
+  est_ratingsIndexCourses = []
   for course in unInteractedCourses: 
     est_rating = model.predict(userid, course).est
     if est_rating >= baselineRating:
       est_ratings.append(est_rating)
+      est_ratingsIndexCourses.append(course)
 
-  iid_est_map = pd.Series(est_ratings, index = unInteractedCourses)
+  iid_est_map = pd.Series(est_ratings, index = est_ratingsIndexCourses)
 
   # predictions_df = modelImports.predictions_df
   # predictions_userID = predictions_df[predictions_df['uid'] == userid].sort_values(by="est", ascending = False).head(5) 
@@ -213,7 +215,7 @@ def SVD_rating(userid, get_recommend =5):
   # iid_est_map = pd.Series(predictions_userID['est'].values.tolist(), index = predictions_userID['iid'].values.tolist())
 
   recommendations_id = []
-  recommendations_id.append(list(unInteractedCourses))
+  recommendations_id.append(list(est_ratingsIndexCourses))
   recommendations_id=recommendations_id[0]
   recommendations_subject = []
   recommended_courses = []
@@ -328,6 +330,7 @@ def NCF_rating_api(
   ##For Neural_Collaborative_Filtering_Part
   recommendation = model1.recommend_user(user = user_id,n_rec = number_recommendation )#returns recommended course_id for user
 
+  print('RECOMMENDATION:', recommendation[user_id])
   # Formatting as json
   recommendations_id = recommendation[user_id]
   recommendations_subject = []
