@@ -53,5 +53,27 @@
 #                   })
 
 # resp = r.json()
-# # print("response is: \n", resp)
+# # print("response is: \n", resp
 
+from .models import TagsPreprocessed
+import pandas as pd
+def getTags(request): 
+    tp_df = pd.read_pickle("oct19_2023/tag_preprocessed.pkl")
+    tp = tp_df.to_dict('records')
+    model_df = TagsPreprocessed
+    predictions_records = tp
+
+    if len(model_df.objects.all()): 
+        model_df.objects.all().delete()
+
+    model_instances = [
+        model_df(
+            id = predictions_record['id'], 
+            tag_name = predictions_record['tag_name'], 
+        )
+        for predictions_record in predictions_records
+    ]
+    model_df.objects.bulk_create(model_instances)
+    status = {"status": "Done Reading"}
+
+    return HttpResponse(json.dumps(status), content_type='application/json')

@@ -9,15 +9,16 @@ from courseRecoSystem.utilsFunctions import applyDictKeysLowerCase
 from .models import UserListRaw, CourseInfoRaw, CourseRatingRaw, TagsRaw
 from courseRecoSystem import utilsFunctions
 
-# KOREAN_URL = os.getenv('KOREAN_URL')
-# KOREAN_TOKEN = os.getenv('KOREAN_TOKEN')
-# INDONESIAN_URL = os.getenv('INDONESIAN_URL')
-# INDONESIAN_TOKEN = os.getenv('INDONESIAN_TOKEN')
-# RECO_URL = os.getenv('RECO_URL')
-# RECO_TOKEN = os.getenv('RECO_TOKEN')
 
 API_URL = os.getenv('API_URL')
 API_TOKEN = os.getenv('API_TOKEN')
+
+tableNameModelMap = {
+    "course-info": CourseInfoRaw, 
+    "course-rating": CourseRatingRaw, 
+    "tag": TagsRaw, 
+    "user-list": UserListRaw, 
+  }
 
 def getDataFrameFromAPI(tableName:str = "", serverName:str = "indonesian", startPage: int = 1, numData: int | str = 20, uptoPage: int = None) -> pd.DataFrame | dict:
   url = API_URL
@@ -29,15 +30,9 @@ def getDataFrameFromAPI(tableName:str = "", serverName:str = "indonesian", start
     "tag": saveIntoTags, 
     "user-list": saveIntoUserList, 
   }
-  tableNameModelMap = {
-    "course-info": CourseInfoRaw, 
-    "course-rating": CourseRatingRaw, 
-    "tag": TagsRaw, 
-    "user-list": UserListRaw, 
-  }
+  
 
-  if len(tableNameModelMap[tableName].objects.all()):
-    tableNameModelMap[tableName].objects.all().delete()
+  
 
   result = []
   if numData == "all":
@@ -54,6 +49,7 @@ def getDataFrameFromAPI(tableName:str = "", serverName:str = "indonesian", start
                 headers = {
                     "Authorization": "token "+ token
                 })
+      
       resp = r.json()
       total_pages = resp["total_pages"]
       print(f"reading page: {pageNum}/{total_pages}")
@@ -80,11 +76,12 @@ def getDataFrameFromAPI(tableName:str = "", serverName:str = "indonesian", start
               headers = {
                   "Authorization": "token "+ token
               })
+      
+      if r.status_code == 404: 
+        print("ERRRRRRRRRRROR: ", r.text, r)
+      
       resp = r.json()
       total_pages = resp["total_pages"]
-      
-      
-
       print(f"reading page: {pageNum}/{total_pages}")
       if "results" in list(resp.keys()):
         result.extend(resp["results"])
@@ -143,6 +140,10 @@ def retrieveSingleTable(tableName:str, currPageNum = 1, _uptoPage = 40):
   ttlPages = 0
   currPageNum = 1
   status = False
+
+  if len(tableNameModelMap[tableName].objects.all()):
+    tableNameModelMap[tableName].objects.all().delete()
+
   while (ttlPages != currPageNum): 
       status, ttlPages, currPageNum = retrieveTables(tableName, currPageNum, currPageNum+9)
       if type(status) == bool: 

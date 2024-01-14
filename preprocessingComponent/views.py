@@ -73,3 +73,14 @@ def buildAllModels(request):
         # "modeling done": status_model
     }
     return HttpResponse(json.dumps(status), content_type='application/json')
+
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def retrieveAllTables(request): 
+    status_raw = retrieveAllRawTables()
+    status = {
+        "raw Tables Retrieved": status_raw, 
+
+    }
+    return HttpResponse(json.dumps(status), content_type='application/json')

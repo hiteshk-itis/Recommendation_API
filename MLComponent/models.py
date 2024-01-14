@@ -14,13 +14,6 @@ class ContentBasedFinalDf(models.Model):
         managed = False
         db_table = 'content_based_final_df'
 
-class PredictionsRatingDf(models.Model): 
-    uid = models.BigIntegerField()
-    iid = models.BigIntegerField()
-    r_ui = models.FloatField()
-    est = models.FloatField()
-    details = models.JSONField()
-
 
 class PredictionsQuizDf(models.Model): 
     uid = models.BigIntegerField()

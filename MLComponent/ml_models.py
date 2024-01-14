@@ -1,7 +1,7 @@
 # from courseRecoSystem.imports import dataImports
 # from .imports import modelImports
 
-from .models import PredictionsRatingDf,PredictionsQuizDf,PredictionsAssnDf
+from .models import PredictionsQuizDf,PredictionsAssnDf
 from preprocessingComponent.models import CourseRatingPreprocessed
 from courseRecoSystem.imports import dataImports
 
@@ -80,41 +80,10 @@ def trainset_and_testset_assn():
 
 
 def train_and_test_svdModel(trainset, testset, model_for): 
-     
-    if model_for == "rating": 
-        model_df = PredictionsRatingDf
-    elif model_for == "quiz": 
-        model_df = PredictionsQuizDf
-    elif model_for == "assn": 
-        model_df = PredictionsAssnDf
-    else: 
-        raise Exception('`model_for` param got unexpected val: ', model_for)
-
     model = SVD(n_factors=10,n_epochs=20,lr_all=0.005,reg_all=0.2)
     model.fit(trainset)
     
     dump(file_name = f"{dataImports.SVDModelsFolder}/SVD_model.pkl", algo = model)
-    # build_anti_testset() user-item matrix of all the items not interacted by user 
-    
-    # predictions = model.test(testset)
-    # predictions_df = pd.DataFrame(predictions)
-    
-    # predictions_records = predictions_df.to_dict('records')
-    
-    # if len(model_df.objects.all()): 
-    #     model_df.objects.all().delete()
-
-    # model_instances = [
-    #     model_df(
-    #         uid = predictions_record['uid'], 
-    #         iid = predictions_record['iid'], 
-    #         r_ui = predictions_record['r_ui'], 
-    #         est = predictions_record['est'], 
-    #         details = predictions_record['details'], 
-    #     )
-    #     for predictions_record in predictions_records
-    # ]
-    # model_df.objects.bulk_create(model_instances)
     predictions_records = {"status": "SVD Model saved"}
     return predictions_records
 
