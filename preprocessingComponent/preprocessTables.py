@@ -8,6 +8,51 @@ import neattext.functions as nfx
 
 # classes: making pipelines
 ## preprocessing CourseList Pipeline
+# class PreprocessingCourseList:
+
+#   def __init__(self, _df: pd.DataFrame):
+#     self.df = _df.copy()
+#     self.df.name = "course_list"
+#     self.colToChange = "tag"
+#     self.resultCols = ["id", "course_name", "tag", "center_code"]
+
+#   def makeColNamesLowerCase(self) -> list:
+#     self.df.columns = [str.lower(str(val)) for val in self.df.columns]
+#     return self.df.columns
+
+#   # converting the tag column into array of integers
+#   def convertToListOfIntegers(self) -> pd.Series:
+#     self.df[self.colToChange] = self.df[self.colToChange].apply(lambda val: np.array(val.split(',')).astype(int) if (not pd.isna(val)) else np.nan)
+#     return self.df[self.colToChange]
+
+#   def truncateDf(self) -> pd.DataFrame:
+#     self.df.drop([x for x in self.df.columns[~self.df.columns.isin(self.resultCols)]], axis = 1, inplace = True)
+#     return self.df
+
+
+#   def changeTagColToTagNames(self, referenceDf: pd.DataFrame):
+#     self.df[self.colToChange] = self.df[self.colToChange].apply(lambda val: utilsFunctions.mapIdsToAnotherDf(val, referenceDf))
+
+#   def joinValsInList(self):
+#     for i in range(len(self.df[self.colToChange])):
+#         if self.df[self.colToChange][i]!=[]:
+#             self.df[self.colToChange][i]=' '.join(self.df[self.colToChange][i])
+#         else:
+#             self.df[self.colToChange][i]=' '.join(self.df[self.colToChange][i])
+#     return self.df[self.colToChange]
+
+#   def convertTagColumnToLowerCase(self):
+#     self.df[self.colToChange] = self.df[self.colToChange].apply(utilsFunctions.applyLowerCase)
+
+#   def makeNLPChanges(self):
+#     self.df[self.colToChange]=self.df[self.colToChange].apply(nfx.remove_stopwords)
+#     self.df[self.colToChange]=self.df[self.colToChange].apply(nfx.remove_special_characters)
+#     self.df[self.colToChange]=self.df[self.colToChange].apply(nfx.remove_puncts)
+#     self.df[self.colToChange]=self.df[self.colToChange].apply(nfx.remove_numbers)
+
+#   def getDf(self) -> pd.DataFrame:
+#     return self.df
+
 class PreprocessingCourseList:
 
   def __init__(self, _df: pd.DataFrame):
@@ -15,22 +60,43 @@ class PreprocessingCourseList:
     self.df.name = "course_list"
     self.colToChange = "tag"
     self.resultCols = ["id", "course_name", "tag", "center_code"]
-    self.df = self.df.dropna(subset=['center_code'])
+
 
   def makeColNamesLowerCase(self) -> list:
     self.df.columns = [str.lower(str(val)) for val in self.df.columns]
+    if 'center_code' in self.df.columns: 
+      self.df = self.df.dropna(subset=['center_code'])
     return self.df.columns
 
   # converting the tag column into array of integers
   def convertToListOfIntegers(self) -> pd.Series:
-    self.df[self.colToChange] = self.df[self.colToChange].apply(lambda val: np.array(val.split(',')).astype(int) if (not pd.isna(val)) else np.nan)
+    finalValsList = []
+    for val in self.df[self.colToChange]:
+      finalVal = np.nan
+      
+      if isinstance(val, list): 
+        if (len(val) != 0):
+          finalVal = val
+        finalValsList.append(finalVal)
+        continue
+      
+      # convert the list that is a string(including brackets), into proper python list
+      if (not pd.isna(val)):
+        val = val.strip('[]')
+        val = re.sub(r'[,]+', ',', val)
+        finalVal = np.array(val.split(',')).astype(int) if val != '' else np.nan
+      finalValsList.append(finalVal)
+
+    self.df[self.colToChange] = pd.Series(finalValsList)
+    # self.df[self.colToChange] = self.df[self.colToChange].apply(lambda val: np.array(val.split(',')).astype(int) if (not pd.isna(val)) else np.nan)
     return self.df[self.colToChange]
 
   def truncateDf(self) -> pd.DataFrame:
     self.df.drop([x for x in self.df.columns[~self.df.columns.isin(self.resultCols)]], axis = 1, inplace = True)
     return self.df
 
-
+  # Here is the problem
+  # Not converting list of numbered tags to tags
   def changeTagColToTagNames(self, referenceDf: pd.DataFrame):
     self.df[self.colToChange] = self.df[self.colToChange].apply(lambda val: utilsFunctions.mapIdsToAnotherDf(val, referenceDf))
 
@@ -60,6 +126,7 @@ class PreprocessingCourseList:
 
   def getDf(self) -> pd.DataFrame:
     return self.df
+
 
 from nltk.stem import PorterStemmer
 from googletrans import Translator
@@ -165,7 +232,7 @@ def preprocessCourseInfo():
 
   courseListObj = PreprocessingCourseList(courseInfoRawDf)
   courseListObj.makeColNamesLowerCase()
-  # courseListObj.convertToListOfIntegers()
+  courseListObj.convertToListOfIntegers()
   courseListObj.truncateDf()
   courseListObj.changeTagColToTagNames(preprocessedTags)
   finalTable3 = courseListObj.getDf()

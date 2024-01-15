@@ -72,7 +72,8 @@ def makeCosineSimilarityMatrix(_df: pd.DataFrame, based_on_col: str) -> np.ndarr
   count_matrix = count.fit_transform(_df[based_on_col])
   cosine_sim = cosine_similarity(count_matrix,count_matrix)
   return cosine_sim
-finalCourseList = pd.read_pickle("oct19_2023/preprocessedCourseInfoDf_oct19.pkl")
+# finalCourseList = pd.read_pickle("oct19_2023/preprocessedCourseInfoDf_oct19.pkl")
+finalCourseList = data_course_list
 cosine_sim = makeCosineSimilarityMatrix(finalCourseList, "tag")
 # =======================================
 # cosine_sim = np.load('oct19_2023/cosineSim_Oct19.pkl', allow_pickle=True)
