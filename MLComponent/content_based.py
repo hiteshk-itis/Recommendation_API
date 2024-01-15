@@ -97,7 +97,7 @@ def content_based(course_id, data=data_df, indices=indices, cosine_sim=cosine_si
       res_dict["recommended_courses"] = []
       return res_dict
     
-    sim = sorted([item for item in sim if item[1] > 0.2],key=lambda x:x[1],reverse=True) # Sort the course based on the cosine similarity scores > 0.2
+    sim = sorted([item for item in sim if item[1] >= 0],key=lambda x:x[1],reverse=True) # Sort the course based on the cosine similarity scores > 0.2
     sim = sim[1:]#Ignore the first course
 
     # sim=sorted(sim,key=lambda x:x[1],reverse=True)
@@ -117,7 +117,7 @@ def content_based(course_id, data=data_df, indices=indices, cosine_sim=cosine_si
         recommended_lst_dict_temp.append(data[data["course_name"]== x].to_dict('records'))
     
     recommended_lst_dict = []
-    for i in range(0, len(recommended_lst_dict_temp)):
+    for i in range(0, min(5, len(recommended_lst_dict_temp))):
         recommended_lst_dict.append(recommended_lst_dict_temp[i][0])     
 
     
